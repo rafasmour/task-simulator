@@ -1,10 +1,10 @@
 # The system counts interval/duration in minutes (0-59)
 TaskSpawners:
-  Restaurant:
+  RestaurantTheofilos:
     taskInterval: 5
-    tasksToSpawn: 2
+    tasksToSpawn: 1
     priority: 1
-    executersAssigned: [ "A", "B" ]
+    executersAssigned: [ "Theofilos"]
     taskTemplate:
       name: "Order"
       duration: 2.5
@@ -12,19 +12,27 @@ TaskSpawners:
     taskInterval: 60
     tasksToSpawn: 6
     priority: 2
-    executersAssigned: [ "A", "B" ]
+    executersAssigned: [ "Theofilos", "Mark" ]
     taskTemplate:
       name: "Cleaning"
       duration: 5
+  RestaurantMark:
+    taskInterval: 5
+    tasksToSpawn: 1
+    priority: 3
+    executersAssigned: [ "Mark" ]
+    taskTemplate:
+      name: "Order"
+      duration: 2.5
 
 TaskReporters: [ "Reporter" ]
 
-TaskExecuters: [ "A", "B" ]
+TaskExecuters: [ "Theofilos", "Mark" ]
 
 TaskSchedulers:
   Waiters:
-    taskSpawners: [ "Restaurant", "Bar" ]
-    taskExecuters: [ "A", "B" ]
+    taskSpawners: [ "RestaurantTheofilos", "Bar", "RestaurantMark" ]
+    taskExecuters: [ "Theofilos", "Mark" ]
 
 
 TaskSimulators:

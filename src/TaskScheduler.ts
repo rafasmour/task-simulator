@@ -24,20 +24,32 @@ export default class TaskScheduler implements TaskSchedulerInterface {
 
     manageTasks(currentTime: Date): void {
         for (const taskExecuter of this.taskExecuters) {
-            if (!taskExecuter.getBusy()) continue;
-            for (const taskSpawner of this.taskSpawners) {
+            if (!taskExecuter.getBusy()) {
+                for (const taskSpawner of this.taskSpawners) {
+                    const task = this.getTaskLifo()
+                    if(!task) continue;
+                    this.assignTask(taskExecuter, task, taskSpawner, currentTime);
+                    break;
+                }
+                continue;
+            }
+            for (const taskSpawner of this.getSpawnersByExecuter(taskExecuter.name)) {
+                const hasTasks = taskSpawner.hasTasks();
+                if(!hasTasks) continue;
                 const task = taskSpawner.getTaskByExecuter(taskExecuter.name);
                 if (!task) continue;
                 const endTime = task.getStopTime();
                 if (!endTime) continue;
-                if (moment(endTime).isSameOrBefore(currentTime)) {
+                if (moment(currentTime).isSameOrAfter(endTime)) {
                     this.completeTask(taskExecuter, task, taskSpawner);
-                    break;
+                } else {
+                    continue;
                 }
                 if (taskExecuter.getBusy()) continue;
                 const taskToAssign = this.getTaskLifo();
                 if (!taskToAssign) continue;
                 this.assignTask(taskExecuter, taskToAssign, taskSpawner, currentTime)
+                break;
             }
         }
     }
@@ -45,7 +57,7 @@ export default class TaskScheduler implements TaskSchedulerInterface {
     leastInterval(currentTime: Date): number {
         return Math.min(
             ...this.taskSpawners
-                .map(taskSpawner => taskSpawner.timeForNextTask(currentTime))
+                .map(taskSpawner => taskSpawner.timeForNextTask(currentTime)).filter((time) => time > 0)
         )
     }
 
@@ -58,28 +70,28 @@ export default class TaskScheduler implements TaskSchedulerInterface {
     }
 
     private completeTask(taskExecuter: TaskExecuter, task: Task, taskSpawner: TaskSpawner): void {
-        const taskIndex = taskSpawner.getTaskIndex(task);
-        taskSpawner.deleteTask(taskIndex);
+        taskSpawner.deleteTask(task);
         taskExecuter.setBusy(false);
     }
 
     private assignTask(taskExecuter: TaskExecuter, task: Task, taskSpawner: TaskSpawner, currentTime: Date) {
-        const taskIndex = taskSpawner.getTaskIndex(task);
-        taskSpawner.startTask(taskIndex, taskExecuter.getName(), currentTime)
-        taskExecuter.setBusy(true);
+        const taskStarted = taskSpawner.startTask(task, taskExecuter.getName(), currentTime)
+        taskExecuter.setBusy(taskStarted);
+    }
+    private getSpawnersByExecuter(executerName: string): TaskSpawner[] {
+        return this.taskSpawners.filter(taskSpawner => taskSpawner.executersAssigned.includes(executerName));
     }
 
-    private getTaskLifo(): Task | undefined {
-        for (const taskSpawner of this.taskSpawners) {
-            for (const task of taskSpawner.getTasks()) {
-                if (!task.getExecuterAssigned())
-                    return task;
-            }
+    private getTaskLifo(executerName: string): Task | undefined {
+        for (const taskSpawner of this.getSpawnersByExecuter(executerName)) {
+            const tasks = taskSpawner.getTasks().filter(task => !task.getExecuterAssigned())
+            if(tasks.length === 0) continue;
+            return tasks[0]
         }
     }
 
-    private getTaskFifo(): Task | undefined {
-        for (const taskSpawner of this.taskSpawners) {
+    private getTaskFifo(executerName: string): Task | undefined {
+        for (const taskSpawner of this.getSpawnersByExecuter(executerName)) {
             const tasks = taskSpawner.getTasks()
             for (let i = tasks.length; i >= 0; i--) {
                 const task = tasks[i]

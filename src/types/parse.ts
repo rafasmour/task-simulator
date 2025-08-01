@@ -9,7 +9,7 @@ export type YamlParseResult = {
 export type TaskSpawners = {
     [name: string]: {
         taskInterval: number;
-        taskToSpawn: number;
+        tasksToSpawn: number;
         priority: number;
         executersAssigned: string[];
         taskTemplate: {

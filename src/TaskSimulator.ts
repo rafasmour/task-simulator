@@ -18,17 +18,27 @@ export default class TaskSimulator implements TaskSimulatorInterface {
 
     start(): void {
         const currentTimeMoment = moment(this.startTime);
+        console.log(`TaskSimulator ${this.name} started at ${currentTimeMoment.format('YYYY-MM-DD HH:mm:ss')}`);
+        // we start without task so we fast forward to the first task generation
+        const leastInterval = this.scheduler.leastInterval(currentTimeMoment.toDate())
+        console.log(`Next task will be generated in ${leastInterval} minutes`);
+        currentTimeMoment.add(
+            leastInterval,
+            'minutes'
+        )
         do {
             this.scheduler.update(currentTimeMoment.toDate())
             this.report.appendReport(
-                `Tasks managed at ${currentTimeMoment.format('YYYY-MM-DD HH:mm:ss')}`,
+                `Tasks managed at ${currentTimeMoment.toDate()}`,
                 currentTimeMoment.toDate()
             )
-            console.log(`Tasks managed at ${currentTimeMoment.format('YYYY-MM-DD HH:mm:ss')}`);
+            console.log(`Tasks managed at ${currentTimeMoment.toDate()}`);
+            const leastInterval = this.scheduler.leastInterval(currentTimeMoment.toDate())
+            console.log(`Next task will be generated in ${leastInterval} minutes`);
             currentTimeMoment.add(
-                this.scheduler.leastInterval(currentTimeMoment.toDate()),
+                leastInterval,
                 'minutes'
             )
-        } while (currentTimeMoment.isSameOrBefore(this.endTime))
+        } while (currentTimeMoment.isSameOrBefore(moment(this.endTime)))
     }
 }

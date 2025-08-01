@@ -32,8 +32,10 @@ function main() {
             if (Object.values(config).length === 0 || !taskTemplate) {
                 throw new Error(`Task template not found for spawner ${name}`);
             }
+            const taskInterval = config.taskInterval;
             return new TaskSpawner(
                 name,
+                config.tasksToSpawn,
                 new Task(taskTemplate.name, taskTemplate.duration),
                 config.taskInterval,
                 config.priority,
