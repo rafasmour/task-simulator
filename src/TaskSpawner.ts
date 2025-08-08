@@ -18,6 +18,7 @@ export default class TaskSpawner implements TaskSpawnerInterface {
     private tasks: Task[];
     // contains the minutes where tasks should be spawned
     private readonly taskInterval: number[];
+    private completedTasks: Task[]
     private readonly tasksToSpawn: number;
     private taskTemplate: Task;
 
@@ -32,10 +33,14 @@ export default class TaskSpawner implements TaskSpawnerInterface {
         this.taskTemplate = taskTemplate;
         this.priority = priority;
         this.executersAssigned = executersAssigned;
+        this.completedTasks = [];
     }
 
     public getName(): string {
         return this.name;
+    }
+    public getCompletedTasks(): Task[] {
+        return this.completedTasks;
     }
 
     public timeForNextTask(currentTime: Date): number {
@@ -61,7 +66,8 @@ export default class TaskSpawner implements TaskSpawnerInterface {
             for (let i = 0; i < this.tasksToSpawn; i++) {
                 const newTask: Task = new Task(
                     this.taskTemplate.name,
-                    this.taskTemplate.duration
+                    this.taskTemplate.duration,
+                    currentTime
                 )
                 console.log(`TaskSpawner ${this.name} generated task ${newTask.name} at ${currentTime}`);
                 this.tasks.push(newTask)
@@ -84,6 +90,10 @@ export default class TaskSpawner implements TaskSpawnerInterface {
     }
 
     public deleteTask(task: Task): void {
+        if (!this.tasks.includes(task)) {
+            throw new Error(`TaskSpawner ${this.name} could not find task to delete`);
+        }
+        this.completedTasks.push(task);
         this.tasks = this.tasks.filter((t) => t !== task);
     }
 

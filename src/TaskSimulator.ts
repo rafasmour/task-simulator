@@ -3,7 +3,7 @@ import TaskScheduler from "./TaskScheduler";
 import moment from "moment";
 
 export interface TaskSimulatorInterface {
-    start(): void;
+    start(): Record<string, object>;
 }
 
 export default class TaskSimulator implements TaskSimulatorInterface {
@@ -16,7 +16,7 @@ export default class TaskSimulator implements TaskSimulatorInterface {
     ) {
     }
 
-    start(): void {
+    start(): Record<string, object> {
         const currentTimeMoment = moment(this.startTime);
         console.log(`TaskSimulator ${this.name} started at ${currentTimeMoment.format('YYYY-MM-DD HH:mm:ss')}`);
         // we start without task so we fast forward to the first task generation
@@ -28,17 +28,16 @@ export default class TaskSimulator implements TaskSimulatorInterface {
         )
         do {
             this.scheduler.update(currentTimeMoment.toDate())
-            this.report.appendReport(
-                `Tasks managed at ${currentTimeMoment.toDate()}`,
-                currentTimeMoment.toDate()
-            )
             console.log(`Tasks managed at ${currentTimeMoment.toDate()}`);
             const leastInterval = this.scheduler.leastInterval(currentTimeMoment.toDate())
             console.log(`Next task will be generated in ${leastInterval} minutes`);
+            const report = this.scheduler.getCurrentState();
+            this.report.appendReport(report, currentTimeMoment.toDate());
             currentTimeMoment.add(
                 leastInterval,
                 'minutes'
             )
-        } while (currentTimeMoment.isSameOrBefore(moment(this.endTime)))
+        } while (currentTimeMoment.isBefore(moment(this.endTime)))
+        return this.report.getOverviewReport();
     }
 }

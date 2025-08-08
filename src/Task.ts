@@ -14,15 +14,19 @@ export interface TaskInterface {
 export default class Task implements TaskInterface {
     public readonly name: string;
     public readonly duration: number;
+    public readonly spawnTime?: Date;
     private startTime?: Date;
     private stopTime?: Date;
     private executerAssigned?: string;
 
-    constructor(name: string, duration: number) {
+    constructor(name: string, duration: number, spawnTime?: Date) {
+        this.spawnTime = spawnTime;
         this.name = name;
         this.duration = duration;
     }
-
+    public getSpawnTime(): Date | undefined {
+        return this.spawnTime ?? undefined;
+    }
     public getStartTime(): Date | undefined {
         return this.startTime ?? undefined;
     }

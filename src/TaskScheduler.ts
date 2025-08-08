@@ -2,6 +2,7 @@ import Task from "./Task";
 import TaskExecuter from "./TaskExecuter";
 import TaskSpawner from "./TaskSpawner";
 import moment from "moment";
+import {TaskSchedulerReport} from "./types/TaskExecuter.types";
 
 export interface TaskSchedulerInterface {
     update(currentTime: Date): void;
@@ -26,7 +27,7 @@ export default class TaskScheduler implements TaskSchedulerInterface {
         for (const taskExecuter of this.taskExecuters) {
             if (!taskExecuter.getBusy()) {
                 for (const taskSpawner of this.taskSpawners) {
-                    const task = this.getTaskLifo()
+                    const task = this.getTaskLifo(taskExecuter.name)
                     if(!task) continue;
                     this.assignTask(taskExecuter, task, taskSpawner, currentTime);
                     break;
@@ -46,7 +47,7 @@ export default class TaskScheduler implements TaskSchedulerInterface {
                     continue;
                 }
                 if (taskExecuter.getBusy()) continue;
-                const taskToAssign = this.getTaskLifo();
+                const taskToAssign = this.getTaskLifo(taskExecuter.name);
                 if (!taskToAssign) continue;
                 this.assignTask(taskExecuter, taskToAssign, taskSpawner, currentTime)
                 break;
@@ -81,7 +82,41 @@ export default class TaskScheduler implements TaskSchedulerInterface {
     private getSpawnersByExecuter(executerName: string): TaskSpawner[] {
         return this.taskSpawners.filter(taskSpawner => taskSpawner.executersAssigned.includes(executerName));
     }
-
+    // is used to get a report of the current state of the scheduler
+    public getCurrentState() {
+        const taskSpawnersState: TaskSchedulerReport["taskSpawners"] = {};
+        for (const taskSpawner of this.taskSpawners) {
+            taskSpawnersState[taskSpawner.name] = {
+                completedTasks: taskSpawner.getCompletedTasks().map(task => ({
+                    name: task.name,
+                    duration: task.duration,
+                    spawnTime: task.getSpawnTime() ?? null,
+                    startTime: task.getStartTime() ?? null,
+                    stopTime: task.getStopTime() ?? null,
+                    executerAssigned: task.getExecuterAssigned() ?? null
+                })),
+                tasks: taskSpawner.getTasks().map(task => ({
+                    name: task.name,
+                    duration: task.duration,
+                    startTime: task.getStartTime() ?? null,
+                    stopTime: task.getStopTime() ?? null,
+                    executerAssigned: task.getExecuterAssigned() ?? null
+                })),
+                priority: taskSpawner.getPriority(),
+                executersAssigned: taskSpawner.executersAssigned
+            };
+        }
+        const taskExecutersState: Record<string, any> = {};
+        for (const taskExecuter of this.taskExecuters) {
+            taskExecutersState[taskExecuter.name] = {
+                busy: taskExecuter.getBusy(),
+            }
+        }
+        return {
+            "taskSpawners": taskSpawnersState,
+            "taskExecuters": taskExecutersState,
+        }
+    }
     private getTaskLifo(executerName: string): Task | undefined {
         for (const taskSpawner of this.getSpawnersByExecuter(executerName)) {
             const tasks = taskSpawner.getTasks().filter(task => !task.getExecuterAssigned())

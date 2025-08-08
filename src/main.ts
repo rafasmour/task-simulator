@@ -10,6 +10,7 @@ import TaskSpawner from "./TaskSpawner";
 import TaskScheduler from "./TaskScheduler";
 import TaskSimulator from "./TaskSimulator";
 import env from "./env";
+import TaskExporter from "./TaskExporter";
 
 
 const dataDir = env.DATA_DIR;
@@ -18,9 +19,12 @@ console.log(`Reading YAML file from: ${dataDir}/${ymlToRead}`);
 if (!dataDir || !ymlToRead) {
     throw new Error('DATA_DIR and YML_TO_READ environment variables must be set');
 }
-
-const dataPath = path.join(__dirname, dataDir, ymlToRead);
-
+const rootDir = path.resolve(__dirname, '../');
+const dataPath = path.join(rootDir, dataDir, ymlToRead);
+const exportDir = path.join(rootDir, dataDir, 'export');
+if(!fs.existsSync(exportDir)) {
+    fs.mkdirSync(exportDir, { recursive: true });
+}
 function main() {
     try {
         const fileContent = fs.readFileSync(dataPath, 'utf8');
@@ -72,8 +76,11 @@ function main() {
                 new Date(config.endTime)
             )
         })
-        taskSimulators.forEach((simulator) => {
-            simulator.start();
+        const reports = taskSimulators.map((simulator) => {
+           return simulator.start();
+        })
+        reports.forEach((report, index) => {
+            TaskExporter.excelExport(exportDir, [`Report ${index + 1}`], [report]);
         })
     } catch (error) {
         console.error('Error reading YAML file:', error);
