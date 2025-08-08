@@ -1,5 +1,5 @@
 import Task from "./Task";
-import moment from "moment";
+import moment, {isDate, isMoment} from "moment";
 
 export interface TaskSpawnerInterface {
     getName(): string;
@@ -44,11 +44,16 @@ export default class TaskSpawner implements TaskSpawnerInterface {
     }
 
     public timeForNextTask(currentTime: Date): number {
-        const currentMinutes = currentTime.getMinutes();
+        const currentMinutes = currentTime.getMinutes() + currentTime.getSeconds() / 60;
         const closestMatch = Math.min(...this.taskInterval.filter((time) => time > currentMinutes));
         if (!closestMatch) return -1;
         const nextTaskSpawn = closestMatch - currentMinutes;
-        const leastCompleteTime = moment.min(...this.tasks.filter(task => task.getStopTime() !== undefined).map(task => moment(task.getStopTime())))
+        const stopMoments = this.tasks.map(task => moment(task.getStopTime())).filter(stopTime => stopTime.isValid());
+        if (!stopMoments) {
+            console.log(currentTime, stopMoments, this.tasks)
+            throw new Error(`TaskSpawner ${this.name} has no stop moments`);
+        }
+        const leastCompleteTime = moment.min(...stopMoments)
         const minutesForNextComplete = moment(leastCompleteTime).diff(moment(currentTime), 'minutes', true /*true means float or precise difference*/);
         const timeForNextTask = Math.min(nextTaskSpawn, minutesForNextComplete);
         return Math.min(...[nextTaskSpawn, minutesForNextComplete].filter(v => v > 0));

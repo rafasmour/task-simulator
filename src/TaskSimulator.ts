@@ -1,9 +1,10 @@
 import TaskReporter from "./TaskReporter";
 import TaskScheduler from "./TaskScheduler";
 import moment from "moment";
+import {TaskOverviewReport} from "./types/TaskExecuter.types";
 
 export interface TaskSimulatorInterface {
-    start(): Record<string, object>;
+    start(): TaskOverviewReport[];
 }
 
 export default class TaskSimulator implements TaskSimulatorInterface {
@@ -16,7 +17,7 @@ export default class TaskSimulator implements TaskSimulatorInterface {
     ) {
     }
 
-    start(): Record<string, object> {
+    start(): TaskOverviewReport[] {
         const currentTimeMoment = moment(this.startTime);
         console.log(`TaskSimulator ${this.name} started at ${currentTimeMoment.format('YYYY-MM-DD HH:mm:ss')}`);
         // we start without task so we fast forward to the first task generation

@@ -45,5 +45,6 @@ export default class Task implements TaskInterface {
         const stopTimeMoment = moment(this.startTime).add({minutes: this.duration})
         this.stopTime = stopTimeMoment.toDate();
         const stop = this.stopTime;
+        console.log(stop)
     }
 }

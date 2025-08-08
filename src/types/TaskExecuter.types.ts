@@ -23,8 +23,9 @@ export type TaskSchedulerReport = {
     }>;
 };
 
-export type TaskOverviewReport = Record<string, {
+export type TaskOverviewReport = {
+    timestamp: string;
     completedTasks: number;
     tasks: number;
     executersBusy: number;
-}>
+};

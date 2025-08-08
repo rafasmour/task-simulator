@@ -80,7 +80,7 @@ function main() {
            return simulator.start();
         })
         reports.forEach((report, index) => {
-            TaskExporter.excelExport(exportDir, [`Report ${index + 1}`], [report]);
+            TaskExporter.excelExport(exportDir, [`${taskSimulators[index].name}`], [report]);
         })
     } catch (error) {
         console.error('Error reading YAML file:', error);
