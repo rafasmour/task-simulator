@@ -27,27 +27,26 @@ export default class TaskReporter implements TaskReporterInterface {
         const timestamp = time.toISOString();
         this.report[timestamp] = report;
     }
+    private get
+    getDetailedReport() {
+        const detailedReport = [];
+        const timestamps = Object.keys(this.report);
+        timestamps.forEach((timestamp) => {
+            const timeStampReport = this.report[timestamp];
+            const taskSpawnerReport = Object.values(timeStampReport.taskSpawners).map(spawner => {
+                return {
+                    [`${spawner.name} completedTasks`]: spawner.completedTasks.length,
+                    [`${spawner.name} tasks`]: spawner.tasks.length,
+                };
+            });
+            const taskExecuterReport = Object.values(timeStampReport.taskExecuters).map(executer => {
+                return {
+                    [`${executer.name} busy`]: `${executer.busy ? `Executing task ${Object.values(timeStampReport)}` : 'is not busy'}`,
+                };
+            });
+        })
 
-    // getDetailedReport() {
-    //     const overview: Record<string, TaskOverviewReport> = {};
-    //     const timestamps = Object.keys(this.report);
-    //     timestamps.forEach((timestamp) => {
-    //         const taskReport = this.report[timestamp];
-    //         const overviewEntry: TaskOverviewReport = {};
-    //
-    //         Object.keys(taskReport.taskSpawners).forEach((spawnerName) => {
-    //             const spawner = taskReport.taskSpawners[spawnerName];
-    //             overviewEntry[spawnerName] = {
-    //                 completedTasks: spawner.completedTasks.length,
-    //                 tasks: spawner.tasks.length,
-    //                 executersBusy: spawner.executersAssigned.filter(executer => taskReport.taskExecuters[executer].busy).length
-    //             };
-    //         });
-    //
-    //         overview[timestamp] = overviewEntry;
-    //     });
-    //     return overview;
-    // }
+    }
     getOverviewReport(): TaskOverviewReport[] {
         const overview: TaskOverviewReport[] = [];
         const timestamps = Object.keys(this.report);

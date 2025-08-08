@@ -29,3 +29,8 @@ export type TaskOverviewReport = {
     tasks: number;
     executersBusy: number;
 };
+
+export type TaskDetailedReport = {
+    timestamp: string;
+    [ke]
+}
